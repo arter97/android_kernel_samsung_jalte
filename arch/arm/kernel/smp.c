@@ -256,6 +256,14 @@ asmlinkage void __cpuinit secondary_start_kernel(void)
 	unsigned int cpu;
 
 	/*
+	 * The identity mapping is uncached (strongly ordered), so
+	 * switch away from it before attempting any exclusive accesses.
+	 */
+	cpu_switch_mm(mm->pgd, mm);
+	enter_lazy_tlb(mm, current);
+	local_flush_tlb_all();
+
+	/*
 	 * All kernel threads share the same mm context; grab a
 	 * reference and switch to it.
 	 */
@@ -671,7 +679,8 @@ void smp_send_stop(void)
 
 	cpumask_copy(&mask, cpu_online_mask);
 	cpumask_clear_cpu(smp_processor_id(), &mask);
-	smp_cross_call(&mask, IPI_CPU_STOP);
+	if (!cpumask_empty(&mask))
+		smp_cross_call(&mask, IPI_CPU_STOP);
 
 	/* Wait up to one second for other CPUs to stop */
 	timeout = USEC_PER_SEC;

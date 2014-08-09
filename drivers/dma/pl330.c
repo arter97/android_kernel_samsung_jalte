@@ -1641,6 +1641,7 @@ static int pl330_submit_req(void *ch_id, struct pl330_req *r)
 		goto xfer_exit;
 	}
 
+	/* Use last settings, if not provided */
 	if (r->cfg) {
 		/* Prefer Secure Channel */
 		if (!_manager_ns(thrd))
@@ -2555,6 +2556,8 @@ static void pl330_free_chan_resources(struct dma_chan *chan)
 {
 	struct dma_pl330_chan *pch = to_pchan(chan);
 	unsigned long flags;
+
+	tasklet_kill(&pch->task);
 
 	spin_lock_irqsave(&pch->lock, flags);
 
