@@ -1,0 +1,32 @@
+ui_print(" ");
+ui_print(" - mounting system partition");
+run_program("/sbin/mount", "/system");
+ui_print(" - mounting data partition");
+run_program("/sbin/mount", "/data");
+
+ui_print(" - deleting old kernel modules");
+run_program("/sbin/busybox", "rm", "-r", "/system/lib/modules");
+
+ui_print(" - installing new kernel modules");
+run_program("/sbin/busybox", "mkdir", "/system/lib/modules");
+run_program("/sbin/busybox", "chown", "0.0", "/system/lib/modules");
+run_program("/sbin/busybox", "chmod", "755", "/system/lib/modules");
+symlink("/lib/modules/dhd.ko", "/system/lib/modules/dhd.ko");
+
+ui_print(" - flashing boot.img");
+package_extract_file("boot.img","/dev/block/platform/dw_mmc.0/by-name/BOOT");
+
+ui_print(" - tuning file systems");
+run_program("/sbin/fstrim", "-v", "/system");
+run_program("/sbin/fstrim", "-v", "/data");
+run_program("/sbin/fstrim", "-v", "/cache");
+
+ui_print(" - unmounting partition /data");
+unmount("/data");
+
+ui_print(" - unmounting partition /system");
+unmount("/system");
+
+ui_print(" ");
+ui_print("finished");
+run_program("/sbin/sync");
