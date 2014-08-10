@@ -21,6 +21,9 @@ on early-init
 
     start ueventd
 
+    setenforce 0
+    setprop ro.boot.selinux 0
+
 # create mountpoints
     mkdir /mnt 0775 root system
 
